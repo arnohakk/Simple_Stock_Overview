@@ -1,1 +1,6 @@
+# Personal stock info file
 portfolio_settings.py
+portfolio_settings.pyc
+
+# Stock plots
+stock_charts/*
