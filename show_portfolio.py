@@ -3,7 +3,7 @@ import os
 import math
 import matplotlib.pyplot as plt
 import pandas as pd
-from numpy import convolve, ones
+from numpy import convolve, ones, isnan
 from scipy.stats import norm
 from pandas import DataFrame as df
 from pandas_datareader import data as pdr
@@ -51,7 +51,8 @@ class StockObject():
 
          # Compute hold time in years
          self.hold_time = relativedelta(self.cur_date, self.buy_date)
-         self.hold_time = self.hold_time.years + self.hold_time.months/12 + self.hold_time.days/365.25
+         self.hold_time = self.hold_time.years + self.hold_time.months/12. + self.hold_time.days/365.25
+
          self.data_start_date = self.buy_date + datetime.timedelta(days=-2*self.window_size)
 
          # Get stock data from Yahoo! Finance
@@ -82,7 +83,6 @@ class StockObject():
          self.time_stamps = list(self.stock_data.index)
 
          # Reset current (converted) price
-
          self.cur_price = self.stock_data['Close'][-1]
 
          if self.currency != self.user_currency:
@@ -116,7 +116,7 @@ class StockObject():
          self.delta_euro = self.cur_value_euro_w_rv - self.invested_euro
          # Compute total return
          self.total_interest = (self.cur_value_euro_w_rv - self.invested_euro) / self.invested_euro * 100.0
-         # Compute annual interest
+         # Compute annual interest         
          self.anual_interest = get_interest_rate(self.hold_time,  self.invested_euro, self.cur_value_euro_w_rv)
 
          # Compute total captial ratio value/invested
@@ -377,16 +377,20 @@ class WealthObject():
         self.axarr[position[0],position[1]].axhline(self.richness['Close'][-start_date] * (1 + -self.interval) , linestyle= 'dashed', color=(176/255, 196/255, 222/255))
 
 
-def round_sigfigs(num, sig_figs=3):
-    if num != 0:
+def round_sigfigs(num,  sig_figs=3):
+    if num != 0 and not isnan(num):
         return round(num, -int(math.floor(math.log10(abs(num))) - (sig_figs - 1)))
     else:
         return 0  # Can't take the log of 0
+
 def gauss(x,a,x0,sigma):
     return a*exp(-(x-x0)**2/(2*sigma**2))
 
-def get_interest_rate(time, start_value, end_value):    
-    rate = (end_value / start_value)**(1./time) - 1
+def get_interest_rate(time, start_value, end_value):
+    if time > 0:
+        rate = (end_value / start_value)**(1./time) - 1
+    else:
+        rate = 0.
     return(rate)
 
 
